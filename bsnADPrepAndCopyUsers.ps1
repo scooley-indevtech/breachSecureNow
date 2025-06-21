@@ -4,7 +4,7 @@ Add-Type -AssemblyName PresentationFramework
 
 # Prompt the user
 $choice = [System.Windows.MessageBox]::Show(
-    "Do you want to create the schema AND copy users from the 'KnowBe4 Users' group to 'BSN-Employees'?",
+    "Do you want to create the schema AND copy users from the 'KnowBe4 Users' group to 'BSN-Employees'? Yes does both; No only creates the schema.",
     "BSN Setup Options",
     "YesNo",
     "Question"
@@ -36,10 +36,13 @@ if ($m365SyncOU) {
 
 # Create "Applications" OU if needed
 if (-not (Get-ADOrganizationalUnit -LDAPFilter "(distinguishedName=$applicationsPath)" -ErrorAction SilentlyContinue)) {
-    New-ADOrganizationalUnit -Name "Applications" -Path ($m365SyncOU?.DistinguishedName ?? $domainDN)
+    if ($m365SyncOU) {
+        New-ADOrganizationalUnit -Name "Applications" -Path $m365SyncOU.DistinguishedName
+    } else {
+        New-ADOrganizationalUnit -Name "Applications" -Path $domainDN
+    }
     Write-Host "Created OU: Applications"
 }
-
 # Create "Breach Secure Now" OU inside Applications
 $bsnPath = "OU=Breach Secure Now,$applicationsPath"
 if (-not (Get-ADOrganizationalUnit -LDAPFilter "(distinguishedName=$bsnPath)" -ErrorAction SilentlyContinue)) {
